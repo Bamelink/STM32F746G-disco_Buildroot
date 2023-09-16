@@ -1,4 +1,4 @@
-url_buildroot = https://buildroot.org/downloads/buildroot-2023.05-rc3.tar.gz
+url_buildroot = https://buildroot.org/downloads/buildroot-2017.02.9.tar.gz
 archive_buildroot = buildroot.tar.gz
 system_image = stm32f746g-disco_system.uImage
 dir_download = downloads
@@ -11,9 +11,15 @@ bootstrap:
 	mkdir -p $(dir_buildroot)
 	wget -O $(dir_download)/$(archive_buildroot) $(url_buildroot)
 	tar zxvf $(dir_download)/$(archive_buildroot) -C $(dir_buildroot) --strip-components=1
-#	cd $(dir_buildroot) && patch -p0 < ../patches/buildroot.002_openocd_version_0_10_0
-#	cd $(dir_buildroot) && patch -p0 < ../patches/buildroot.003_openocd_hash
+	cd $(dir_buildroot) && patch -p0 < ../patches/buildroot.002_openocd_version_0_10_0
+	cd $(dir_buildroot) && patch -p0 < ../patches/buildroot.003_openocd_hash
 	cp $(dir_configs)/buildroot $(dir_buildroot)/.config
+
+menuconfig:
+	make -C $(dir_buildroot) menuconfig
+
+saveconfig:
+	cp -fv $(dir_buildroot)/.config $(dir_configs)/buildroot
 
 build:
 	make -C $(dir_buildroot)
@@ -24,7 +30,7 @@ build:
 	dd if=$(dir_buildroot)/output/images/u-boot.bin of=$(dir_buildroot)/output/images/bootloader.bin conv=notrunc bs=1K seek=32
 
 flash_bootloader:
-	cd $(dir_buildroot)/output/build/host-openocd-0.12.0/tcl && ../../../host/usr/bin/openocd \
+	cd $(dir_buildroot)/output/build/host-openocd-0.10.0/tcl && ../../../host/usr/bin/openocd \
 		-f board/stm32f7discovery.cfg \
 		-c "program ../../../images/u-boot-spl.bin 0x08000000" \
 		-c "program ../../../images/u-boot.bin 0x08008000" \
